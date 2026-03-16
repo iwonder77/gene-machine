@@ -1,5 +1,6 @@
 #include "Reader.h"
 #include "Config.h"
+#include "src/GeneMachineTag.h"
 
 // NOTE: must call Wire.begin() in setup() before we initialize reader!
 void Reader::init() {
@@ -35,7 +36,8 @@ void Reader::update() {
   }
 
   uint32_t now = millis();
-  bool tag_detected = false;
+  bool tag_detected = false; // flips to false on every update() call, only set
+                             // to true when detected with MFRC522 methods below
 
   // --- TAG DETECTION ---
   if (reader_.PICC_IsNewCardPresent() && reader_.PICC_ReadCardSerial()) {
@@ -67,14 +69,18 @@ void Reader::update() {
       // this debounce check ensures tag is actually present
       if (now - first_seen_time > config::TAG_DEBOUNCE_TIME) {
         tag_state = TAG_PRESENT;
+        tag_identified_ = false;
+        read_attempts_ = 0;
         Serial.print(name_);
-        Serial.println(": Tag confirmed present, reading data");
-        // once tag is confirmed present, now we read its data
-        readTagData();
+        Serial.println(
+            ": Tag confirmed present, transitioning to read its data");
       }
       break;
     case TAG_PRESENT:
-      // check if this is the same tag we saw on previous turn
+      // 1. Handle tag swap first
+      // before doing anything else, check if this is a different tag, if it is,
+      // we need to throw away our current state and start the debounce process
+      // over again for the new tag
       if (!is_same_tag) {
         // different tag detected
         tag_state = TAG_DETECTED;
@@ -83,8 +89,38 @@ void Reader::update() {
         Serial.println(": Different tag detected, clearing previous data");
         // clear previous tag data before we move on to reading this one
         clearTagData();
+        tag_identified_ = false;
+        read_attempts_ = 0;
+        break; // exit the switch - don't try to read a tag we haven't confirmed
       }
-      // otherwise same tag is still present - no action needed
+      // 2. Attempt tag identification
+      // we can assume the same tag is still here, if we haven't identified it
+      // yet, try reading
+      if (!tag_identified_) {
+        readTagData();
+
+        if (tag_.pair != gene_tag::NucleotidePair::NONE) {
+          // parse succeeded - we must know what this piece is now
+          tag_identified_ = true;
+          Serial.print(name_);
+          Serial.print(": Identified piece as ");
+          Serial.println(gene_tag::pairToString(tag_.pair));
+        } else {
+          // parse failed - count read attempts here
+          read_attempts_++;
+
+          if (read_attempts_ >= config::MAX_READ_ATTEMPTS) {
+            Serial.print(name_);
+            Serial.println(": Tag present but unreadable after max attempts");
+            // stop trying — tag is physically there but we can't identify it.
+            // we don't clear tag state or change tag_state, because the tag
+            // IS present. we just can't read it. the system treats this slot
+            // as occupied but unknown.
+          }
+        }
+      }
+      // else: tag is already identified, same tag still present - nothing to
+      // do
       break;
     case TAG_REMOVED:
       tag_state = TAG_DETECTED;
@@ -175,6 +211,11 @@ void Reader::readTagData() {
     return;
   }
 
+  if (!gene_tag::parseTagData(buffer, tag_)) {
+    Serial.print(name_);
+    Serial.println(": data read but incorrect");
+  }
+
   /*****************
    * DON'T HALT - let tag remain active for continuous detection
    * reader.PICC_HaltA();
@@ -183,14 +224,6 @@ void Reader::readTagData() {
 }
 
 // ========== UTILITY FUNCTIONS ==========
-uint8_t Reader::calculateChecksum(const uint8_t *data, uint8_t length) {
-  uint8_t sum = 0;
-  for (uint8_t i = 0; i < length; i++) {
-    sum ^= data[i];
-  }
-  return sum;
-}
-
 bool Reader::compareUID(byte *uid1, uint8_t len1, byte *uid2, uint8_t len2) {
   return (len1 == len2) && memcmp(uid1, uid2, len1) == 0;
 }
