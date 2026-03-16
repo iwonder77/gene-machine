@@ -61,8 +61,9 @@ inline const char *pairToString(NucleotidePair pair) {
  * Parse tag data from a raw byte buffer.
  * Validates magic byte and checksum.
  *
- * The struct is always populated via memcpy, even on failure,
- * so the caller can inspect individual fields for diagnostics.
+ * The TagData struct `out` is always populated via memcpy, even if buffer data
+ * doesn't match, so it is up to the caller to inspect individual fields for
+ * diagnostics.
  */
 inline bool parseTagData(const byte *buffer, TagData &out) {
   memcpy(&out, buffer, sizeof(TagData));
