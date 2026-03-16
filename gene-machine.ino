@@ -32,21 +32,6 @@ Reader readers[] = { { "ch_0", 0 }, { "ch_1", 1 }, { "ch_2", 2 }, { "ch_3", 3 } 
 constexpr uint8_t NUM_READERS = sizeof(readers) / sizeof(readers[0]);
 uint32_t last_poll_time = 0;
 
-// ----- BUTTON INTERRUPT STUFF -----
-const uint8_t BUTTON_PIN = 48;
-const uint8_t LED_PIN = 47;
-volatile bool pressed = false;
-volatile unsigned long last_press_time = 0;
-
-// ===== ISR ======
-void IRAM_ATTR buttonISR() {
-  unsigned long now = millis();
-  if (now - last_press_time > config::BUTTON_DEBOUNCE_MS) {
-    pressed = !pressed;
-    last_press_time = now;
-  }
-}
-
 void setup() {
   Serial.begin(115200);
   while (!Serial) { delay(10); }  // wait for USB CDC Serial on ESP32-S3
@@ -65,25 +50,15 @@ void setup() {
   Serial.print("I2C SCL: GPIO");
   Serial.println(config::I2C_SCL);
 
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
-  pinMode(BUTTON_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonISR, FALLING);
-
   Serial.println("Press button to scan for a tag.");
 }
 
 void loop() {
   uint32_t now = millis();
-  if (pressed) {
-    digitalWrite(LED_PIN, HIGH);
     if (now - last_poll_time >= config::POLL_INTERVAL_MS) {
       for (int i = 0; i < NUM_READERS; i++) {
         readers[i].update();
       }
       last_poll_time = now;
     }
-  } else {
-    digitalWrite(LED_PIN, LOW);
-  }
 }
