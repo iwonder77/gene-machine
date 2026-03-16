@@ -1,6 +1,5 @@
 #include "Reader.h"
 #include "Config.h"
-#include "src/GeneMachineTag.h"
 
 // NOTE: must call Wire.begin() in setup() before we initialize reader!
 void Reader::init() {
