@@ -20,6 +20,7 @@ constexpr uint32_t TAG_ABSENCE_TIMEOUT =
     450; // time before considering tag removed
 constexpr uint8_t TAG_PRESENCE_THRESHOLD = 3; // num fails before marking absent
 constexpr uint8_t TAG_START_PAGE = 4; // page # to read data from in tag memory
+constexpr uint8_t MAX_READ_ATTEMPTS = 5;
 
 // ----- I2C Addresses -----
 constexpr uint8_t MUX_ADDR = 0x70;
