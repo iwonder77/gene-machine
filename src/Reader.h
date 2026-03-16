@@ -31,6 +31,7 @@ public:
   TagState getTagState() const { return tag_state; };
   uint8_t getChannel() const { return channel_; }
   bool getReaderStatus() const { return reader_ok; }
+  gene_tag::NucleotidePair getPair() const { return tag_.pair; };
 
 private:
   const char *name_;
@@ -40,6 +41,8 @@ private:
   bool reader_ok = false;
 
   gene_tag::TagData tag_;
+  bool tag_identified_ = false;
+  uint8_t read_attempts_ = 0;
 
   TagState tag_state = TAG_ABSENT;
   uint32_t last_seen_time = 0;
@@ -51,6 +54,5 @@ private:
 
   void clearTagData();
   void readTagData();
-  uint8_t calculateChecksum(const uint8_t *data, uint8_t length);
   bool compareUID(uint8_t *uid1, uint8_t len1, uint8_t *uid2, uint8_t len2);
 };
