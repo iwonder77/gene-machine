@@ -7,6 +7,7 @@
 #include <Wire.h>
 
 #include "Config.h"
+#include "GeneMachineTag.h"
 #include "MuxController.h"
 
 enum TagState { TAG_ABSENT, TAG_DETECTED, TAG_PRESENT, TAG_REMOVED };
@@ -36,8 +37,9 @@ private:
   uint8_t channel_;
   MFRC522DriverI2C driver_;
   MFRC522 reader_;
-
   bool reader_ok = false;
+
+  gene_tag::TagData tag_;
 
   TagState tag_state = TAG_ABSENT;
   uint32_t last_seen_time = 0;
