@@ -57,17 +57,17 @@ void Reader::update() {
 
     // transition tagState now that a tag has been detected
     switch (tag_state) {
-    case TAG_ABSENT:
-      tag_state = TAG_DETECTED;
+    case TagState::Absent:
+      tag_state = TagState::Detecting;
       first_seen_time = now; // start debounce timer
       Serial.print(name_);
       Serial.println(": New tag detected!");
       break;
-    case TAG_DETECTED:
+    case TagState::Detecting:
       // check debounce timer in case we have a false positive detection
       // this debounce check ensures tag is actually present
       if (now - first_seen_time > config::TAG_DEBOUNCE_TIME) {
-        tag_state = TAG_PRESENT;
+        tag_state = TagState::Confirmed;
         tag_identified_ = false;
         read_attempts_ = 0;
         Serial.print(name_);
@@ -75,14 +75,14 @@ void Reader::update() {
             ": Tag confirmed present, transitioning to read its data");
       }
       break;
-    case TAG_PRESENT:
+    case TagState::Confirmed:
       // 1. Handle tag swap first
       // before doing anything else, check if this is a different tag, if it is,
       // we need to throw away our current state and start the debounce process
       // over again for the new tag
       if (!is_same_tag) {
         // different tag detected
-        tag_state = TAG_DETECTED;
+        tag_state = TagState::Detecting;
         first_seen_time = now;
         Serial.print(name_);
         Serial.println(": Different tag detected, clearing previous data");
@@ -98,7 +98,7 @@ void Reader::update() {
       if (!tag_identified_) {
         readTagData();
 
-        if (tag_.pair != gene_tag::NucleotidePair::NONE) {
+        if (tag_.pair != gene_tag::NucleotidePair::None) {
           // parse succeeded - we must know what this piece is now
           tag_identified_ = true;
           Serial.print(name_);
@@ -121,8 +121,8 @@ void Reader::update() {
       // else: tag is already identified, same tag still present - nothing to
       // do
       break;
-    case TAG_REMOVED:
-      tag_state = TAG_DETECTED;
+    case TagState::Departing:
+      tag_state = TagState::Detecting;
       first_seen_time = now;
       Serial.print(name_);
       Serial.println(": Tag returned!");
@@ -133,33 +133,33 @@ void Reader::update() {
   }
 
   // --- ABSENCE DETECTION ---
-  if (!tag_detected && tag_state != TAG_ABSENT) {
+  if (!tag_detected && tag_state != TagState::Absent) {
     consecutive_fails++;
 
     switch (tag_state) {
-    case TAG_DETECTED:
+    case TagState::Detecting:
       // small timeout for tags that were just detected or for false positives
       if (consecutive_fails > 2) {
-        tag_state = TAG_ABSENT;
+        tag_state = TagState::Absent;
         Serial.print(name_);
         Serial.println(": Tag detection failed");
         clearTagData();
       }
       break;
-    case TAG_PRESENT:
+    case TagState::Confirmed:
       // more lenient/longer timeout for already established tags
       if (consecutive_fails >= config::TAG_PRESENCE_THRESHOLD ||
           now - last_seen_time > config::TAG_ABSENCE_TIMEOUT) {
-        tag_state = TAG_REMOVED;
+        tag_state = TagState::Departing;
         Serial.print(name_);
         Serial.println(": Tag removed");
         clearTagData();
       }
       break;
-    case TAG_REMOVED:
+    case TagState::Departing:
       // confirm removal
       if (now - last_seen_time > config::TAG_ABSENCE_TIMEOUT) {
-        tag_state = TAG_ABSENT;
+        tag_state = TagState::Absent;
         Serial.print(name_);
         Serial.println(": Tag removal confirmed");
       }
@@ -172,16 +172,16 @@ void Reader::update() {
 
 void Reader::printStatus() const {
   switch (tag_state) {
-  case TAG_ABSENT:
+  case TagState::Absent:
     Serial.println("No card");
     break;
-  case TAG_DETECTED:
+  case TagState::Detecting:
     Serial.println("Detecting...");
     break;
-  case TAG_PRESENT:
+  case TagState::Confirmed:
     Serial.println("Tag present");
     break;
-  case TAG_REMOVED:
+  case TagState::Departing:
     Serial.println("Card removed (confirming...)");
     break;
   }
@@ -193,7 +193,7 @@ void Reader::clearTagData() {
 }
 
 void Reader::readTagData() {
-  if (!reader_ok || tag_state != TAG_PRESENT)
+  if (!reader_ok || tag_state != TagState::Confirmed)
     return;
 
   Serial.print(name_);
