@@ -151,12 +151,17 @@ void Reader::update() {
       break;
     case TagState::Confirmed:
       // more lenient/longer timeout for already established tags
-      if (consecutive_fails >= config::TAG_PRESENCE_THRESHOLD ||
-          now - last_seen_time > config::TAG_ABSENCE_TIMEOUT) {
+      if (consecutive_fails >= config::TAG_PRESENCE_THRESHOLD) {
         tag_state = TagState::Departing;
         Serial.print(name_);
         Serial.println(": Tag removed");
+        if (callback_ && tag_identified_) {
+          callback_(Event{EventType::PieceRemoved, channel_,
+                          gene_tag::NucleotidePair::None});
+        }
         clearTagData();
+        tag_identified_ = false;
+        read_attempts_ = 0;
       }
       break;
     case TagState::Departing:
@@ -165,10 +170,6 @@ void Reader::update() {
         tag_state = TagState::Absent;
         Serial.print(name_);
         Serial.println(": Tag removal confirmed");
-        if (callback_) {
-          callback_(Event{EventType::PieceRemoved, channel_,
-                          gene_tag::NucleotidePair::None});
-        }
       }
       break;
     default:
@@ -197,6 +198,9 @@ void Reader::printStatus() const {
 void Reader::clearTagData() {
   last_UID_length = 0;
   memset(last_UID, 0, sizeof(last_UID));
+  tag_identified_ = false;
+  read_attempts_ = 0;
+  tag_ = {0, 0, gene_tag::NucleotidePair::None, 0};
 }
 
 void Reader::readTagData() {
