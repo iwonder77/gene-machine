@@ -7,6 +7,7 @@
 #include <Wire.h>
 
 #include "Config.h"
+#include "Event.h"
 #include "GeneMachineTag.h"
 #include "MuxController.h"
 
@@ -33,6 +34,8 @@ public:
   void update();
   void printStatus() const;
 
+  void setCallback(EventCallback cb) { callback_ = cb; }
+
   TagState getTagState() const { return tag_state; };
   uint8_t getChannel() const { return channel_; }
   bool getReaderStatus() const { return reader_ok; }
@@ -44,6 +47,8 @@ private:
   MFRC522DriverI2C driver_;
   MFRC522 reader_;
   bool reader_ok = false;
+
+  EventCallback callback_ = nullptr;
 
   gene_tag::TagData tag_;
   bool tag_identified_ = false;
