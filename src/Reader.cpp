@@ -104,6 +104,9 @@ void Reader::update() {
           Serial.print(name_);
           Serial.print(": Identified piece as ");
           Serial.println(gene_tag::pairToString(tag_.pair));
+          if (callback_) {
+            callback_(Event{EventType::PieceIdentified, channel_, tag_.pair});
+          }
         } else {
           // parse failed - count read attempts here
           read_attempts_++;
@@ -162,6 +165,10 @@ void Reader::update() {
         tag_state = TagState::Absent;
         Serial.print(name_);
         Serial.println(": Tag removal confirmed");
+        if (callback_) {
+          callback_(Event{EventType::PieceRemoved, channel_,
+                          gene_tag::NucleotidePair::None});
+        }
       }
       break;
     default:
@@ -210,6 +217,7 @@ void Reader::readTagData() {
     return;
   }
 
+  // MIFARE_Read read some data into buffer, lets parse it and verify
   if (!gene_tag::parseTagData(buffer, tag_)) {
     Serial.print(name_);
     Serial.println(": data read but incorrect");
