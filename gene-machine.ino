@@ -27,10 +27,27 @@
 
 #include "src/Config.h"
 #include "src/Reader.h"
+#include "src/GeneMachineTag.h"
 
 Reader readers[] = { { "ch_0", 0 }, { "ch_1", 1 }, { "ch_2", 2 }, { "ch_3", 3 } };
 constexpr uint8_t NUM_READERS = sizeof(readers) / sizeof(readers[0]);
 uint32_t last_poll_time = 0;
+
+void onEvent(const Event& event) {
+  switch (event.type) {
+    case EventType::PieceIdentified:
+      Serial.print(gene_tag::pairToString(event.pair));
+      Serial.print(" Nucleotide pair placed in slot: ");
+      Serial.println(event.slot);
+      break;
+    case EventType::PieceRemoved:
+      Serial.print("Piece removed from slot: ");
+      Serial.println(event.slot);
+      break;
+    default:
+      break;
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -42,6 +59,7 @@ void setup() {
 
   for (int i = 0; i < NUM_READERS; i++) {
     readers[i].init();
+    readers[i].setCallback(onEvent);
   }
 
   Serial.println("=== RFID Scanner Ready ===");
@@ -49,16 +67,14 @@ void setup() {
   Serial.println(config::I2C_SDA);
   Serial.print("I2C SCL: GPIO");
   Serial.println(config::I2C_SCL);
-
-  Serial.println("Press button to scan for a tag.");
 }
 
 void loop() {
   uint32_t now = millis();
-    if (now - last_poll_time >= config::POLL_INTERVAL_MS) {
-      for (int i = 0; i < NUM_READERS; i++) {
-        readers[i].update();
-      }
-      last_poll_time = now;
+  if (now - last_poll_time >= config::POLL_INTERVAL_MS) {
+    for (int i = 0; i < NUM_READERS; i++) {
+      readers[i].update();
     }
+    last_poll_time = now;
+  }
 }
