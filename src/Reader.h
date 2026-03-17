@@ -10,7 +10,12 @@
 #include "GeneMachineTag.h"
 #include "MuxController.h"
 
-enum TagState { TAG_ABSENT, TAG_DETECTED, TAG_PRESENT, TAG_REMOVED };
+enum class TagState {
+  Absent,    // no tag present, waiting for first detection
+  Detecting, // first detection, now must pass debounce
+  Confirmed, // debounce passed, reading data
+  Departing  // stopped seeing tag, confirming removal w/ debounce
+};
 
 // Reader class owns channel switching on mux for now
 struct MuxGuard {
@@ -44,7 +49,7 @@ private:
   bool tag_identified_ = false;
   uint8_t read_attempts_ = 0;
 
-  TagState tag_state = TAG_ABSENT;
+  TagState tag_state = TagState::Absent;
   uint32_t last_seen_time = 0;
   uint32_t first_seen_time = 0;
 
