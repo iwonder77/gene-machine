@@ -1,3 +1,4 @@
+#pragma once
 /**
  * Gene Machine — Tag Data Format
  *
@@ -13,7 +14,6 @@
  *   Byte 3: XOR checksum of bytes 0–2
  */
 
-#pragma once
 #include <Arduino.h>
 
 namespace gene_tag {
@@ -25,7 +25,7 @@ constexpr uint8_t REV_BYTE = 0x01;
 
 // -- Types ------------------------------------------------------------
 
-enum class NucleotidePair : uint8_t { NONE = 0, AT = 1, CG = 2 };
+enum class NucleotidePair : uint8_t { None = 0, AT = 1, CG = 2 };
 
 // NOTE: no padding in this struct since all four fields are uint8_t.
 struct TagData {
