@@ -10,7 +10,7 @@
 #include "GeneMachineTag.h"
 #include "MuxController.h"
 
-enum class TagState {
+enum class TagState : uint8_t {
   Absent,    // no tag present, waiting for first detection
   Detecting, // first detection, now must pass debounce
   Confirmed, // debounce passed, reading data
