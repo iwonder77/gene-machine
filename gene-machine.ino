@@ -27,26 +27,14 @@
 
 #include "src/Config.h"
 #include "src/Reader.h"
-#include "src/GeneMachineTag.h"
+#include "src/SequenceManager.h"
 
 Reader readers[] = { { "ch_0", 0 }, { "ch_1", 1 }, { "ch_2", 2 }, { "ch_3", 3 } };
-constexpr uint8_t NUM_READERS = sizeof(readers) / sizeof(readers[0]);
+SequenceManager sequencer;
 uint32_t last_poll_time = 0;
 
 void onEvent(const Event& event) {
-  switch (event.type) {
-    case EventType::PieceIdentified:
-      Serial.print(gene_tag::pairToString(event.pair));
-      Serial.print(" Nucleotide pair placed in slot: ");
-      Serial.println(event.slot);
-      break;
-    case EventType::PieceRemoved:
-      Serial.print("Piece removed from slot: ");
-      Serial.println(event.slot);
-      break;
-    default:
-      break;
-  }
+  sequencer.handleEvent(event);
 }
 
 void setup() {
@@ -57,7 +45,7 @@ void setup() {
   Wire.setClock(400000);  // RFID2 supports 400 kHz fast mode; reduces read latency
   delay(100);
 
-  for (int i = 0; i < NUM_READERS; i++) {
+  for (int i = 0; i < config::NUM_READERS; i++) {
     readers[i].init();
     readers[i].setCallback(onEvent);
   }
@@ -72,7 +60,7 @@ void setup() {
 void loop() {
   uint32_t now = millis();
   if (now - last_poll_time >= config::POLL_INTERVAL_MS) {
-    for (int i = 0; i < NUM_READERS; i++) {
+    for (int i = 0; i < config::NUM_READERS; i++) {
       readers[i].update();
     }
     last_poll_time = now;
