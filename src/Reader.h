@@ -36,9 +36,9 @@ public:
 
   void setCallback(EventCallback cb) { callback_ = cb; }
 
-  TagState getTagState() const { return tag_state; };
+  TagState getTagState() const { return tag_state_; };
   uint8_t getChannel() const { return channel_; }
-  bool getReaderStatus() const { return reader_ok; }
+  bool getReaderStatus() const { return reader_ok_; }
   gene_tag::NucleotidePair getPair() const { return tag_.pair; };
 
 private:
@@ -46,7 +46,7 @@ private:
   uint8_t channel_;
   MFRC522DriverI2C driver_;
   MFRC522 reader_;
-  bool reader_ok = false;
+  bool reader_ok_ = false;
 
   EventCallback callback_ = nullptr;
 
@@ -54,13 +54,13 @@ private:
   bool tag_identified_ = false;
   uint8_t read_attempts_ = 0;
 
-  TagState tag_state = TagState::Absent;
-  uint32_t last_seen_time = 0;
-  uint32_t first_seen_time = 0;
+  TagState tag_state_ = TagState::Absent;
+  uint32_t last_seen_time_ = 0;
+  uint32_t first_seen_time_ = 0;
 
-  uint8_t consecutive_fails = 0;
-  uint8_t last_UID[10]{};
-  uint8_t last_UID_length = 0;
+  uint8_t consecutive_fails_ = 0;
+  uint8_t last_UID_[10]{};
+  uint8_t last_UID_length_ = 0;
 
   void clearTagData();
   void readTagData();

@@ -16,12 +16,12 @@ void Reader::init() {
   Wire.beginTransmission(config::WS1850S_I2C_ADDR);
   if (Wire.endTransmission() != 0) {
     Serial.println("FAILED - I2C Communication ERROR");
-    reader_ok = false;
+    reader_ok_ = false;
     return;
   }
 
   Serial.println(" SUCCESS");
-  reader_ok = true;
+  reader_ok_ = true;
 
   // initialize hardware instance
   reader_.PCD_Init();
@@ -30,7 +30,7 @@ void Reader::init() {
 void Reader::update() {
   MuxGuard guard(channel_);
 
-  if (!reader_ok) {
+  if (!reader_ok_) {
     return;
   }
 
@@ -43,31 +43,31 @@ void Reader::update() {
     tag_detected = true;
 
     // check if this is the same tag or a different one
-    bool is_same_tag = (last_UID_length == reader_.uid.size) &&
-                       compareUID(last_UID, last_UID_length,
+    bool is_same_tag = (last_UID_length_ == reader_.uid.size) &&
+                       compareUID(last_UID_, last_UID_length_,
                                   reader_.uid.uidByte, reader_.uid.size);
 
     // update UID
-    memcpy(last_UID, reader_.uid.uidByte, reader_.uid.size);
-    last_UID_length = reader_.uid.size;
+    memcpy(last_UID_, reader_.uid.uidByte, reader_.uid.size);
+    last_UID_length_ = reader_.uid.size;
 
     // update timing and error
-    last_seen_time = now;
-    consecutive_fails = 0;
+    last_seen_time_ = now;
+    consecutive_fails_ = 0;
 
     // transition tagState now that a tag has been detected
-    switch (tag_state) {
+    switch (tag_state_) {
     case TagState::Absent:
-      tag_state = TagState::Detecting;
-      first_seen_time = now; // start debounce timer
+      tag_state_ = TagState::Detecting;
+      first_seen_time_ = now; // start debounce timer
       Serial.print(name_);
       Serial.println(": New tag detected!");
       break;
     case TagState::Detecting:
       // check debounce timer in case we have a false positive detection
       // this debounce check ensures tag is actually present
-      if (now - first_seen_time > config::TAG_DEBOUNCE_TIME) {
-        tag_state = TagState::Confirmed;
+      if (now - first_seen_time_ > config::TAG_DEBOUNCE_TIME) {
+        tag_state_ = TagState::Confirmed;
         tag_identified_ = false;
         read_attempts_ = 0;
         Serial.print(name_);
@@ -82,8 +82,8 @@ void Reader::update() {
       // over again for the new tag
       if (!is_same_tag) {
         // different tag detected
-        tag_state = TagState::Detecting;
-        first_seen_time = now;
+        tag_state_ = TagState::Detecting;
+        first_seen_time_ = now;
         Serial.print(name_);
         Serial.println(": Different tag detected, clearing previous data");
         // clear previous tag data before we move on to reading this one
@@ -125,8 +125,8 @@ void Reader::update() {
       // do
       break;
     case TagState::Departing:
-      tag_state = TagState::Detecting;
-      first_seen_time = now;
+      tag_state_ = TagState::Detecting;
+      first_seen_time_ = now;
       Serial.print(name_);
       Serial.println(": Tag returned!");
       break;
@@ -136,14 +136,14 @@ void Reader::update() {
   }
 
   // --- ABSENCE DETECTION ---
-  if (!tag_detected && tag_state != TagState::Absent) {
-    consecutive_fails++;
+  if (!tag_detected && tag_state_ != TagState::Absent) {
+    consecutive_fails_++;
 
-    switch (tag_state) {
+    switch (tag_state_) {
     case TagState::Detecting:
       // small timeout for tags that were just detected or for false positives
-      if (consecutive_fails > 2) {
-        tag_state = TagState::Absent;
+      if (consecutive_fails_ > 2) {
+        tag_state_ = TagState::Absent;
         Serial.print(name_);
         Serial.println(": Tag detection failed");
         clearTagData();
@@ -151,8 +151,8 @@ void Reader::update() {
       break;
     case TagState::Confirmed:
       // more lenient/longer timeout for already established tags
-      if (consecutive_fails >= config::TAG_PRESENCE_THRESHOLD) {
-        tag_state = TagState::Departing;
+      if (consecutive_fails_ >= config::TAG_PRESENCE_THRESHOLD) {
+        tag_state_ = TagState::Departing;
         Serial.print(name_);
         Serial.println(": Tag removed");
         if (callback_ && tag_identified_) {
@@ -166,8 +166,8 @@ void Reader::update() {
       break;
     case TagState::Departing:
       // confirm removal
-      if (now - last_seen_time > config::TAG_ABSENCE_TIMEOUT) {
-        tag_state = TagState::Absent;
+      if (now - last_seen_time_ > config::TAG_ABSENCE_TIMEOUT) {
+        tag_state_ = TagState::Absent;
         Serial.print(name_);
         Serial.println(": Tag removal confirmed");
       }
@@ -179,7 +179,7 @@ void Reader::update() {
 }
 
 void Reader::printStatus() const {
-  switch (tag_state) {
+  switch (tag_state_) {
   case TagState::Absent:
     Serial.println("No card");
     break;
@@ -196,15 +196,15 @@ void Reader::printStatus() const {
 }
 
 void Reader::clearTagData() {
-  last_UID_length = 0;
-  memset(last_UID, 0, sizeof(last_UID));
+  last_UID_length_ = 0;
+  memset(last_UID_, 0, sizeof(last_UID_));
   tag_identified_ = false;
   read_attempts_ = 0;
   tag_ = {0, 0, gene_tag::NucleotidePair::None, 0};
 }
 
 void Reader::readTagData() {
-  if (!reader_ok || tag_state != TagState::Confirmed)
+  if (!reader_ok_ || tag_state_ != TagState::Confirmed)
     return;
 
   Serial.print(name_);
