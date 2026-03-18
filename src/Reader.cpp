@@ -78,15 +78,19 @@ void Reader::update() {
     case TagState::Confirmed:
       // 1. Handle tag swap first
       // before doing anything else, check if this is a different tag, if it is,
-      // we need to throw away our current state and start the debounce process
-      // over again for the new tag
+      // we need to throw away our current state, fire a removal event, clear
+      // previous tag data, and start the debounce process over again for the
+      // new tag
       if (!is_same_tag) {
         // different tag detected
         tag_state_ = TagState::Detecting;
         first_seen_time_ = now;
         Serial.print(name_);
         Serial.println(": Different tag detected, clearing previous data");
-        // clear previous tag data before we move on to reading this one
+        if (tag_identified_ && callback_) {
+          callback_(Event{EventType::PieceRemoved, channel_,
+                          gene_tag::NucleotidePair::None});
+        }
         clearTagData();
         tag_identified_ = false;
         read_attempts_ = 0;
@@ -160,8 +164,6 @@ void Reader::update() {
                           gene_tag::NucleotidePair::None});
         }
         clearTagData();
-        tag_identified_ = false;
-        read_attempts_ = 0;
       }
       break;
     case TagState::Departing:
