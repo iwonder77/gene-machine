@@ -19,6 +19,8 @@ void SequenceManager::handleEvent(const Event &event) {
     if (sequence_complete_) {
       Serial.println("Slots filled!");
       printSequence();
+      // TODO: Send UDP packet here with
+      // ethernet.sendUDPCommand(sequence_string)
     }
     break;
   case EventType::PieceRemoved:
