@@ -5,6 +5,17 @@ void SequenceManager::handleEvent(const Event &event) {
   switch (event.type) {
   case EventType::PieceIdentified:
     slots_[event.slot] = event.pair;
+    // tell LEDs what to show
+    switch (event.pair) {
+    case gene_tag::NucleotidePair::AT:
+      leds_.setAnimation(event.slot, AnimationType::TrailGreen);
+      break;
+    case gene_tag::NucleotidePair::CG:
+      leds_.setAnimation(event.slot, AnimationType::TrailBlue);
+      break;
+    default:
+      break;
+    }
     // check if all slots have been filled
     // mark sequence_complete_ as true here, the following check will revert it
     // back to false if ANY of the slots are empty
@@ -28,6 +39,7 @@ void SequenceManager::handleEvent(const Event &event) {
     break;
   case EventType::PieceRemoved:
     slots_[event.slot] = gene_tag::NucleotidePair::None;
+    leds_.setAnimation(event.slot, AnimationType::Idle);
     sequence_complete_ = false;
     break;
   default:
