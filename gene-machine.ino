@@ -1,9 +1,9 @@
 /**
  * Project: Gene Machine interactive
  * File: gene-machine.ino
- * Description: Scan tags with RFID modules on every MUX channel to poll for nucleotide 
- *              pieces, animate LED lights and send UDP packets according to 
- *              order/sequence of nucelotide pieces
+ * Description: Embedded tags are scanned with RFID modules to detect nucleotide 
+ *              pair pieces, then LED lights are animated and UDP packets are sent 
+ *              according to order/sequence of nucelotide pieces
  *
  * Author: Isai Sanchez
  * Date: 3-16-26
