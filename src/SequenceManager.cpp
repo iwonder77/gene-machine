@@ -1,4 +1,5 @@
 #include "SequenceManager.h"
+#include "src/Config.h"
 
 void SequenceManager::handleEvent(const Event &event) {
   printEvent(event);
@@ -19,8 +20,11 @@ void SequenceManager::handleEvent(const Event &event) {
     if (sequence_complete_) {
       Serial.println("Slots filled!");
       printSequence();
-      // TODO: Send UDP packet here with
-      // ethernet.sendUDPCommand(sequence_string)
+      uint8_t index = buildSequenceIndex();
+      Serial.print("Sending UDP packet: {");
+      Serial.print(config::VIDEO_COMMANDS[index]);
+      Serial.println(" }\n");
+      ethernet_.sendUdpCommand(config::VIDEO_COMMANDS[index]);
     }
     break;
   case EventType::PieceRemoved:
@@ -54,4 +58,14 @@ void SequenceManager::printEvent(const Event &event) {
   default:
     break;
   }
+}
+
+uint8_t SequenceManager::buildSequenceIndex() {
+  uint8_t index = 0;
+  for (int i = 0; i < config::NUM_READERS; i++) {
+    if (slots_[i] == gene_tag::NucleotidePair::CG) {
+      index |= (1 << i);
+    }
+  }
+  return index;
 }
