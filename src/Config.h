@@ -42,4 +42,28 @@ static const uint8_t TARGET_IP[4] = {192, 168, 50, 10}; // BrightSign target IP
 constexpr uint16_t UDP_PORT = 5000;
 constexpr uint32_t LINK_TIMEOUT_MS =
     10000; // how long to wait for link on boot (ms)
+
+// ----- SEQUENCE LOOK UP TABLE -----
+constexpr uint8_t NUM_SEQUENCES = 16; // 2^4
+
+// index of array corresponds to bit-packed sequence (slot 0 = bit 0, CG = 1, AT
+// = 0) example: AT-CG-AT-CG = 0b1010 = index 10
+const char *const VIDEO_COMMANDS[NUM_SEQUENCES] = {
+    "media1",  // 0b0000 = 0  , AT-AT-AT-AT
+    "media2",  // 0b0001 = 1  , AT-AT-AT-CG
+    "media3",  // 0b0010 = 2  , AT-AT-CG-AT
+    "media4",  // 0b0011 = 3  , AT-AT-CG-CG
+    "media5",  // 0b0100 = 4  , AT-CG-AT-AT
+    "media6",  // 0b0101 = 5  , AT-CG-AT-CG
+    "media7",  // 0b0110 = 6  , AT-CG-CG-AT
+    "media8",  // 0b0111 = 7  , AT-CG-CG-CG
+    "media9",  // 0b1000 = 8  , CG-AT-AT-AT
+    "media10", // 0b1001 = 9  , CG-AT-AT-CG
+    "media11", // 0b1010 = 10 , CG-AT-CG-AT
+    "media12", // 0b1011 = 11 , CG-AT-CG-CG
+    "media13", // 0b1100 = 12 , CG-CG-AT-AT
+    "media14", // 0b1101 = 13 , CG-CG-AT-CG
+    "media15", // 0b1110 = 14 , CG-CG-CG-AT
+    "media16", // 0b1111 = 15 , CG-CG-CG-CG
+};
 } // namespace config
