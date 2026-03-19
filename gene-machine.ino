@@ -28,9 +28,11 @@
 #include "src/Config.h"
 #include "src/Reader.h"
 #include "src/SequenceManager.h"
+#include "src/EthernetController.h"
 
 Reader readers[] = { { "ch_0", 0 }, { "ch_1", 1 }, { "ch_2", 2 }, { "ch_3", 3 } };
-SequenceManager sequencer;
+EthernetController ethernet;
+SequenceManager sequencer(ethernet);
 uint32_t last_poll_time = 0;
 
 void onEvent(const Event& event) {
@@ -49,6 +51,7 @@ void setup() {
     readers[i].init();
     readers[i].setCallback(onEvent);
   }
+  ethernet.init();
 
   Serial.println("=== RFID Scanner Ready ===");
   Serial.print("I2C SDA: GPIO");
@@ -65,4 +68,5 @@ void loop() {
     }
     last_poll_time = now;
   }
+  ethernet.updateLinkStatus();
 }
