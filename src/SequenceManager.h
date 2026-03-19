@@ -1,4 +1,3 @@
-
 #pragma once
 /**
  * SequenceManager.h
@@ -10,11 +9,13 @@
 #include <Arduino.h>
 
 #include "Config.h"
+#include "EthernetController.h"
 #include "Event.h"
 #include "GeneMachineTag.h"
 
 class SequenceManager {
 public:
+  SequenceManager(EthernetController &ethernet) : ethernet_(ethernet) {}
   // void update();
   void handleEvent(const Event &event);
   void printSequence();
@@ -23,4 +24,6 @@ public:
 private:
   gene_tag::NucleotidePair slots_[config::NUM_READERS] = {};
   bool sequence_complete_ = false;
+
+  EthernetController &ethernet_;
 };
