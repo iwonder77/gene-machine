@@ -1,5 +1,4 @@
 #include "SequenceManager.h"
-#include "src/Config.h"
 
 void SequenceManager::handleEvent(const Event &event) {
   printEvent(event);
