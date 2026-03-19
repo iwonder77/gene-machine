@@ -6,8 +6,9 @@
 #include <SPI.h>
 
 class EthernetController {
+public:
   void init();
-  void isReady();
+  bool isReady();
   void updateLinkStatus();
   void sendUdpCommand(const char *command);
 
