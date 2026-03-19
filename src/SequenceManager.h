@@ -26,4 +26,6 @@ private:
   bool sequence_complete_ = false;
 
   EthernetController &ethernet_;
+
+  uint8_t buildSequenceIndex();
 };
