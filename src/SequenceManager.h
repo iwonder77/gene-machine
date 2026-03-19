@@ -12,10 +12,12 @@
 #include "EthernetController.h"
 #include "Event.h"
 #include "GeneMachineTag.h"
+#include "LEDController.h"
 
 class SequenceManager {
 public:
-  SequenceManager(EthernetController &ethernet) : ethernet_(ethernet) {}
+  SequenceManager(EthernetController &ethernet, LEDController &leds)
+      : ethernet_(ethernet), leds_(leds) {}
   // void update();
   void handleEvent(const Event &event);
   void printSequence();
@@ -26,6 +28,7 @@ private:
   bool sequence_complete_ = false;
 
   EthernetController &ethernet_;
+  LEDController &leds_;
 
   uint8_t buildSequenceIndex();
 };
