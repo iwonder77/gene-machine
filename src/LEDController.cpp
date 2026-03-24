@@ -53,7 +53,7 @@ void LEDController::setAnimation(uint8_t strip, AnimationType type) {
 void LEDController::renderIdle(uint8_t strip, uint32_t now) {
   const CRGB baseColor = CRGB(180, 130, 255); // lavender
   const uint8_t minBright = 40;
-  const uint8_t maxBright = 200;
+  const uint8_t maxBright = 150;
   const uint16_t period = 3000; // 3 second full breath cycle
 
   uint32_t elapsed = (now - strips_state_[strip].start_time) % period;
