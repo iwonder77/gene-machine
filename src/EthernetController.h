@@ -8,7 +8,6 @@
 class EthernetController {
 public:
   void init();
-  bool isReady();
   void updateLinkStatus();
   void sendUdpCommand(const char *command);
 
