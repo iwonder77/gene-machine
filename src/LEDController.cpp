@@ -4,10 +4,14 @@
 #include "LEDController.h"
 
 void LEDController::init() {
-  FastLED.addLeds<WS2815, DATA_PINS[0], GRB>(leds_[0], LEDS_PER_STRIP);
-  FastLED.addLeds<WS2815, DATA_PINS[1], GRB>(leds_[1], LEDS_PER_STRIP);
-  FastLED.addLeds<WS2815, DATA_PINS[2], GRB>(leds_[2], LEDS_PER_STRIP);
-  FastLED.addLeds<WS2815, DATA_PINS[3], GRB>(leds_[3], LEDS_PER_STRIP);
+  FastLED.addLeds<WS2815, config::DATA_PINS[0], GRB>(leds_[0],
+                                                     config::LEDS_PER_STRIP);
+  FastLED.addLeds<WS2815, config::DATA_PINS[1], GRB>(leds_[1],
+                                                     config::LEDS_PER_STRIP);
+  FastLED.addLeds<WS2815, config::DATA_PINS[2], GRB>(leds_[2],
+                                                     config::LEDS_PER_STRIP);
+  FastLED.addLeds<WS2815, config::DATA_PINS[3], GRB>(leds_[3],
+                                                     config::LEDS_PER_STRIP);
   FastLED.setBrightness(125); // max global, we control per-LED
 
   // brief startup sequence
@@ -15,8 +19,8 @@ void LEDController::init() {
   CRGB testColors[] = {CRGB::Red, CRGB::Green, CRGB::Blue, CRGB::White,
                        CRGB::Black};
   for (auto color : testColors) {
-    for (uint8_t i = 0; i < NUM_STRIPS; i++) {
-      fill_solid(leds_[i], LEDS_PER_STRIP, color);
+    for (uint8_t i = 0; i < config::NUM_STRIPS; i++) {
+      fill_solid(leds_[i], config::LEDS_PER_STRIP, color);
     }
     FastLED.show();
     delay(200);
@@ -26,7 +30,7 @@ void LEDController::init() {
 void LEDController::update() {
   uint32_t now = millis();
 
-  for (uint8_t i = 0; i < NUM_STRIPS; i++) {
+  for (uint8_t i = 0; i < config::NUM_STRIPS; i++) {
     switch (strips_state_[i].animation) {
     case AnimationType::Idle:
       renderIdle(i, now);
@@ -44,7 +48,7 @@ void LEDController::update() {
 }
 
 void LEDController::setAnimation(uint8_t strip, AnimationType type) {
-  if (strip >= NUM_STRIPS)
+  if (strip >= config::NUM_STRIPS)
     return;
   strips_state_[strip].animation = type;
   strips_state_[strip].start_time = millis();
@@ -58,14 +62,14 @@ void LEDController::renderIdle(uint8_t strip, uint32_t now) {
 
   uint32_t elapsed = (now - strips_state_[strip].start_time) % period;
   float angle = (2.0f * PI * elapsed) / period;
-  float wave = (sin(angle) + 1.0f) / 2.0f;
+  float wave = (sinf(angle) + 1.0f) / 2.0f;
   uint8_t brightness = minBright + wave * (maxBright - minBright);
 
   // scale color by brightness rather than using global setBrightness
   CRGB color = baseColor;
   color.nscale8(brightness);
 
-  fill_solid(leds_[strip], LEDS_PER_STRIP, color);
+  fill_solid(leds_[strip], config::LEDS_PER_STRIP, color);
 }
 
 void LEDController::renderTrail(uint8_t strip, uint32_t now, CRGB color) {
@@ -73,12 +77,12 @@ void LEDController::renderTrail(uint8_t strip, uint32_t now, CRGB color) {
   const float speedMsPerLed = 100.0f;
   uint32_t elapsed = now - strips_state_[strip].start_time;
 
-  float position = fmod(elapsed / speedMsPerLed, (float)LEDS_PER_STRIP);
+  float position = fmod(elapsed / speedMsPerLed, (float)config::LEDS_PER_STRIP);
 
-  for (uint8_t i = 0; i < LEDS_PER_STRIP; i++) {
+  for (uint8_t i = 0; i < config::LEDS_PER_STRIP; i++) {
     // how far behind the head is this LED (wrapping around)?
-    float distance =
-        fmod((float)LEDS_PER_STRIP + position - i, (float)LEDS_PER_STRIP);
+    float distance = fmod((float)config::LEDS_PER_STRIP + position - i,
+                          (float)config::LEDS_PER_STRIP);
 
     if (distance < trailLength) {
       float brightness = 1.0f - (distance / trailLength);

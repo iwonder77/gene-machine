@@ -69,4 +69,9 @@ const char *const VIDEO_COMMANDS[NUM_SEQUENCES] = {
     "straight_hair", // 0b1110 = 14 , AT-CG-CG-CG
     "wavy_hair",     // 0b1111 = 15 , CG-CG-CG-CG
 };
+
+// ----- LEDs -----
+constexpr uint8_t NUM_STRIPS = 4;
+constexpr uint8_t LEDS_PER_STRIP = 9;
+constexpr uint8_t DATA_PINS[NUM_STRIPS] = {1, 2, 3, 15};
 } // namespace config
