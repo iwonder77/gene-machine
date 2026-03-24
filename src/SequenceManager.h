@@ -18,7 +18,6 @@ class SequenceManager {
 public:
   SequenceManager(EthernetController &ethernet, LEDController &leds)
       : ethernet_(ethernet), leds_(leds) {}
-  // void update();
   void handleEvent(const Event &event);
   void printSequence();
   void printEvent(const Event &event);
