@@ -43,7 +43,7 @@ void onEvent(const Event& event) {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) { delay(10); }  // wait for USB CDC Serial on ESP32-S3
+  while (!Serial && millis() < 3000) { delay(10); }  // wait for USB CDC Serial on ESP32-S3
 
   Wire.begin(config::I2C_SDA, config::I2C_SCL);
   Wire.setClock(400000);  // RFID2 supports 400 kHz fast mode; reduces read latency
