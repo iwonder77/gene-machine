@@ -28,11 +28,14 @@ void Reader::init() {
 }
 
 void Reader::update() {
-  MuxGuard guard(channel_);
-
   if (!reader_ok_) {
     return;
   }
+
+  // same scoped mux selection as init(): everything below talks to the
+  // reader on channel `channel_`, and the mux channels are disabled when
+  // update() returns (MuxGuard destructor).
+  MuxGuard guard(channel_);
 
   uint32_t now = millis();
   bool tag_detected = false; // flips to false on every update() call, only set
